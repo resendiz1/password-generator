@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="es" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0d6efd">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Clave Segura · Generador de contraseñas y UUID</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container py-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="10" width="16" height="11" rx="3"></rect>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+              <path d="M12 14v3"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="h4 mb-0">Clave Segura</h1>
+            <p class="text-secondary mb-0 small">Generador local de contraseñas, UUID y tokens</p>
+          </div>
+        </div>
+        <button type="button" id="themeToggle" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" aria-pressed="false" aria-label="Cambiar a modo oscuro">
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path>
+          </svg>
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <span id="themeLabel" class="d-none d-sm-inline">Modo oscuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container pb-5">
+    <div class="privacy-banner d-flex align-items-start gap-2 mb-4" role="note">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3l8 3v6c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V6l8-3z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
+      <p class="mb-0 small">Todo se genera en tu navegador con <strong>crypto.getRandomValues()</strong>. Sin servidores, sin base de datos y sin almacenamiento automático de contraseñas.</p>
+    </div>
+
+    <nav class="tool-tabs mb-4" aria-label="Herramientas">
+      <div class="nav nav-pills flex-nowrap overflow-auto gap-2 pb-1" role="tablist">
+        <button class="nav-link active" id="uuidTab" data-bs-toggle="tab" data-bs-target="#tab-uuid" type="button" role="tab" aria-controls="tab-uuid" aria-selected="true">UUID</button>
+        <button class="nav-link" id="passwordTab" data-bs-toggle="tab" data-bs-target="#tab-password" type="button" role="tab" aria-controls="tab-password" aria-selected="false">Contraseñas</button>
+        <button class="nav-link" id="passphraseTab" data-bs-toggle="tab" data-bs-target="#tab-passphrase" type="button" role="tab" aria-controls="tab-passphrase" aria-selected="false">Frases</button>
+        <button class="nav-link" id="tokenTab" data-bs-toggle="tab" data-bs-target="#tab-token" type="button" role="tab" aria-controls="tab-token" aria-selected="false">Tokens</button>
+        <button class="nav-link" id="checkerTab" data-bs-toggle="tab" data-bs-target="#tab-checker" type="button" role="tab" aria-controls="tab-checker" aria-selected="false">Comprobador</button>
+        <button class="nav-link" id="historyTab" data-bs-toggle="tab" data-bs-target="#tab-history" type="button" role="tab" aria-controls="tab-history" aria-selected="false">Historial <span id="historyTabBadge" class="badge rounded-pill text-bg-secondary ms-1">0</span></button>
+      </div>
+    </nav>
+
+    <div class="tab-content">
+      <section class="tab-pane fade show active" id="tab-uuid" role="tabpanel" aria-labelledby="uuidTab" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <h2 class="card-title h5">Generador UUID v4</h2>
+                <p class="text-secondary small">Identificadores únicos aleatorios con versión y variante correctas.</p>
+                <form id="uuidForm" novalidate>
+                  <div class="mb-2">
+                    <label for="uuidCount" class="form-label">Cantidad</label>
+                    <div class="input-group">
+                      <input type="number" class="form-control" id="uuidCount" min="1" max="10000" step="1" value="10" inputmode="numeric" aria-describedby="uuidCountHelp uuidCountFeedback">
+                      <span class="input-group-text">UUID</span>
+                    </div>
+                    <div class="form-text" id="uuidCountHelp">De 1 a 10.000. Se evitan duplicados dentro del lote.</div>
+                    <div class="invalid-feedback d-block" id="uuidCountFeedback" role="alert"></div>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Cantidades rápidas">
+                    <button type="button" class="btn btn-sm btn-outline-secondary uuid-preset" data-count="1">1</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary uuid-preset" data-count="10">10</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary uuid-preset" data-count="50">50</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary uuid-preset" data-count="100">100</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary uuid-preset" data-count="500">500</button>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="me-1" aria-hidden="true">
+                      <path d="M4 12a8 8 0 0 1 14-5.3M20 4v5h-5M20 12a8 8 0 0 1-14 5.3M4 20v-5h5"></path>
+                    </svg>
+                    Generar UUID
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="card results-card h-100">
+              <div class="card-header">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="h6 mb-0">Resultados</h2>
+                    <span class="badge rounded-pill text-bg-primary" id="uuidCountBadge">0</span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="uuidCopyAll">Copiar todo</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="uuidRegenerate">Regenerar</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="uuidClear">Limpiar</button>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Exportar</button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="uuid" data-format="txt">Descargar TXT</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="uuid" data-format="csv">Descargar CSV</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="uuid" data-format="json">Descargar JSON</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="empty-state" id="uuidEmpty">
+                  <p class="mb-1 fw-semibold">Aún no hay UUID generados</p>
+                  <p class="mb-0 small text-secondary">Elige una cantidad y pulsa «Generar UUID».</p>
+                </div>
+                <div class="table-responsive results-scroll d-none" id="uuidTableWrap">
+                  <table class="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col" class="text-secondary small">#</th>
+                        <th scope="col" class="text-secondary small">UUID v4</th>
+                        <th scope="col" class="text-end text-secondary small">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody id="uuidResults"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="tab-password" role="tabpanel" aria-labelledby="passwordTab" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <h2 class="card-title h5">Generador de contraseñas</h2>
+                <p class="text-secondary small">Contraseñas criptográficamente seguras entre 8 y 128 caracteres.</p>
+                <form id="passwordForm" novalidate>
+                  <div class="mb-3">
+                    <label for="passwordLength" class="form-label">Longitud</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <input type="number" class="form-control length-number" id="passwordLength" min="8" max="128" step="1" value="20" inputmode="numeric" aria-describedby="passwordLengthFeedback">
+                      <span class="text-secondary small">caracteres</span>
+                    </div>
+                    <input type="range" class="form-range mt-2" id="passwordLengthRange" min="8" max="128" step="1" value="20" aria-label="Longitud de la contraseña">
+                    <div class="invalid-feedback d-block" id="passwordLengthFeedback" role="alert"></div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="passwordQuantity" class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" id="passwordQuantity" min="1" max="100" step="1" value="5" inputmode="numeric" aria-describedby="passwordQuantityFeedback">
+                    <div class="invalid-feedback d-block" id="passwordQuantityFeedback" role="alert"></div>
+                  </div>
+                  <fieldset class="mb-3">
+                    <legend class="form-label fs-6">Incluir</legend>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="pwUpper" checked>
+                          <label class="form-check-label" for="pwUpper">Mayúsculas</label>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="pwLower" checked>
+                          <label class="form-check-label" for="pwLower">Minúsculas</label>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="pwDigits" checked>
+                          <label class="form-check-label" for="pwDigits">Números</label>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="pwSymbols" checked>
+                          <label class="form-check-label" for="pwSymbols">Símbolos</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-check mt-2">
+                      <input class="form-check-input" type="checkbox" id="pwExcludeAmbiguous">
+                      <label class="form-check-label" for="pwExcludeAmbiguous">Excluir caracteres ambiguos (O, 0, l, I)</label>
+                    </div>
+                    <div class="invalid-feedback d-block" id="passwordSetsFeedback" role="alert"></div>
+                  </fieldset>
+                  <p class="form-text">Cada contraseña incluye al menos un carácter de cada tipo seleccionado.</p>
+                  <button type="submit" class="btn btn-primary w-100">Generar contraseñas</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="card results-card h-100">
+              <div class="card-header">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="h6 mb-0">Resultados</h2>
+                    <span class="badge rounded-pill text-bg-primary" id="passwordCountBadge">0</span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="passwordToggleAll">Ocultar</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="passwordCopyAll">Copiar todo</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="passwordRegenerate">Regenerar</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="passwordClear">Limpiar</button>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Exportar</button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="password" data-format="txt">Descargar TXT</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="password" data-format="csv">Descargar CSV</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="password" data-format="json">Descargar JSON</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="empty-state" id="passwordEmpty">
+                  <p class="mb-1 fw-semibold">Aún no hay contraseñas generadas</p>
+                  <p class="mb-0 small text-secondary">Configura los tipos de caracteres y pulsa «Generar contraseñas».</p>
+                </div>
+                <div class="password-list d-none" id="passwordList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="tab-passphrase" role="tabpanel" aria-labelledby="passphraseTab" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <h2 class="card-title h5">Frases de contraseña</h2>
+                <p class="text-secondary small">Palabras aleatorias de una lista local, fáciles de recordar y difíciles de adivinar.</p>
+                <form id="passphraseForm" novalidate>
+                  <div class="mb-3">
+                    <label for="passphraseWords" class="form-label">Número de palabras</label>
+                    <input type="number" class="form-control" id="passphraseWords" min="3" max="12" step="1" value="5" inputmode="numeric" aria-describedby="passphraseWordsFeedback">
+                    <div class="invalid-feedback d-block" id="passphraseWordsFeedback" role="alert"></div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="passphraseQuantity" class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" id="passphraseQuantity" min="1" max="100" step="1" value="5" inputmode="numeric" aria-describedby="passphraseQuantityFeedback">
+                    <div class="invalid-feedback d-block" id="passphraseQuantityFeedback" role="alert"></div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="passphraseSeparator" class="form-label">Separador</label>
+                    <select class="form-select" id="passphraseSeparator">
+                      <option value="-" selected>Gui&#243;n (-)</option>
+                      <option value=" ">Espacio</option>
+                      <option value=".">Punto (.)</option>
+                      <option value="_">Gui&#243;n bajo (_)</option>
+                      <option value="+">M&#225;s (+)</option>
+                    </select>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="passphraseCapitalize">
+                    <label class="form-check-label" for="passphraseCapitalize">Capitalizar cada palabra</label>
+                  </div>
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="passphraseNumber">
+                    <label class="form-check-label" for="passphraseNumber">Añadir un número final</label>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100">Generar frases</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="card results-card h-100">
+              <div class="card-header">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="h6 mb-0">Resultados</h2>
+                    <span class="badge rounded-pill text-bg-primary" id="passphraseCountBadge">0</span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="passphraseToggleAll">Ocultar</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="passphraseCopyAll">Copiar todo</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="passphraseRegenerate">Regenerar</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="passphraseClear">Limpiar</button>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Exportar</button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="passphrase" data-format="txt">Descargar TXT</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="passphrase" data-format="csv">Descargar CSV</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="passphrase" data-format="json">Descargar JSON</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="empty-state" id="passphraseEmpty">
+                  <p class="mb-1 fw-semibold">Aún no hay frases generadas</p>
+                  <p class="mb-0 small text-secondary">Elige el número de palabras y pulsa «Generar frases».</p>
+                </div>
+                <div class="password-list d-none" id="passphraseList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="tab-token" role="tabpanel" aria-labelledby="tokenTab" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <h2 class="card-title h5">Generador de tokens</h2>
+                <p class="text-secondary small">Cadenas hexadecimales, Base64 o con tu propio alfabeto.</p>
+                <form id="tokenForm" novalidate>
+                  <div class="mb-3">
+                    <label for="tokenType" class="form-label">Tipo de token</label>
+                    <select class="form-select" id="tokenType">
+                      <option value="hex" selected>Hexadecimal</option>
+                      <option value="base64">Base64</option>
+                      <option value="custom">Alfabeto personalizado</option>
+                    </select>
+                  </div>
+                  <div id="tokenHexOptions">
+                    <label for="tokenHexLength" class="form-label">Longitud hexadecimal</label>
+                    <input type="number" class="form-control" id="tokenHexLength" min="8" max="256" step="2" value="32" inputmode="numeric" aria-describedby="tokenHexLengthFeedback">
+                    <div class="form-text">Entre 8 y 256 caracteres, en pasos de 2.</div>
+                    <div class="invalid-feedback d-block" id="tokenHexLengthFeedback" role="alert"></div>
+                  </div>
+                  <div id="tokenBase64Options" class="d-none">
+                    <label for="tokenBase64Bytes" class="form-label">Bytes aleatorios</label>
+                    <input type="number" class="form-control" id="tokenBase64Bytes" min="8" max="128" step="1" value="24" inputmode="numeric" aria-describedby="tokenBase64BytesFeedback">
+                    <div class="form-text">Entre 8 y 128 bytes. La cadena Base64 resultante será más larga.</div>
+                    <div class="invalid-feedback d-block" id="tokenBase64BytesFeedback" role="alert"></div>
+                  </div>
+                  <div id="tokenCustomOptions" class="d-none">
+                    <div class="mb-3">
+                      <label for="tokenAlphabet" class="form-label">Alfabeto</label>
+                      <input type="text" class="form-control font-monospace" id="tokenAlphabet" value="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789" autocomplete="off" spellcheck="false" aria-describedby="tokenAlphabetHelp tokenAlphabetFeedback">
+                      <div class="form-text" id="tokenAlphabetHelp">Mínimo 2 caracteres distintos. Los duplicados se ignoran.</div>
+                      <div class="invalid-feedback d-block" id="tokenAlphabetFeedback" role="alert"></div>
+                    </div>
+                    <div>
+                      <label for="tokenCustomLength" class="form-label">Longitud</label>
+                      <input type="number" class="form-control" id="tokenCustomLength" min="1" max="256" step="1" value="32" inputmode="numeric" aria-describedby="tokenCustomLengthFeedback">
+                      <div class="invalid-feedback d-block" id="tokenCustomLengthFeedback" role="alert"></div>
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <label for="tokenQuantity" class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" id="tokenQuantity" min="1" max="100" step="1" value="5" inputmode="numeric" aria-describedby="tokenQuantityFeedback">
+                    <div class="invalid-feedback d-block" id="tokenQuantityFeedback" role="alert"></div>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100 mt-3">Generar tokens</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="card results-card h-100">
+              <div class="card-header">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="h6 mb-0">Resultados</h2>
+                    <span class="badge rounded-pill text-bg-primary" id="tokenCountBadge">0</span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="tokenToggleAll">Ocultar</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="tokenCopyAll">Copiar todo</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="tokenRegenerate">Regenerar</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="tokenClear">Limpiar</button>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Exportar</button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="token" data-format="txt">Descargar TXT</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="token" data-format="csv">Descargar CSV</button></li>
+                        <li><button type="button" class="dropdown-item export-btn" data-tool="token" data-format="json">Descargar JSON</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="empty-state" id="tokenEmpty">
+                  <p class="mb-1 fw-semibold">Aún no hay tokens generados</p>
+                  <p class="mb-0 small text-secondary">Elige un tipo de token y pulsa «Generar tokens».</p>
+                </div>
+                <div class="password-list d-none" id="tokenList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="tab-checker" role="tabpanel" aria-labelledby="checkerTab" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <h2 class="card-title h5">Comprobador de contraseñas</h2>
+                <p class="text-secondary small">Analiza una contraseña sin guardarla ni enviarla a ningún sitio.</p>
+                <label for="checkerInput" class="form-label">Contraseña a comprobar</label>
+                <div class="input-group mb-2">
+                  <input type="password" class="form-control font-monospace" id="checkerInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="checkerHelp">
+                  <button type="button" class="btn btn-outline-secondary" id="checkerToggle">Mostrar</button>
+                </div>
+                <p class="form-text" id="checkerHelp">El contenido permanece únicamente en esta pestaña y no se añade al historial.</p>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="checkerClear">Limpiar campo</button>
+                <h3 class="h6 mt-4">Composición</h3>
+                <div class="composition-grid">
+                  <div class="composition-item"><span class="composition-value" id="checkerLength">0</span><span class="composition-label">Caracteres</span></div>
+                  <div class="composition-item"><span class="composition-value" id="checkerUpper">0</span><span class="composition-label">Mayúsculas</span></div>
+                  <div class="composition-item"><span class="composition-value" id="checkerLower">0</span><span class="composition-label">Minúsculas</span></div>
+                  <div class="composition-item"><span class="composition-value" id="checkerDigits">0</span><span class="composition-label">Números</span></div>
+                  <div class="composition-item"><span class="composition-value" id="checkerSymbols">0</span><span class="composition-label">Símbolos</span></div>
+                  <div class="composition-item"><span class="composition-value" id="checkerUnique">0</span><span class="composition-label">Únicos</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card config-card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                  <h2 class="card-title h5 mb-0">Fortaleza orientativa</h2>
+                  <span class="badge text-bg-secondary" id="checkerStrengthLabel">Sin datos</span>
+                </div>
+                <div class="progress strength mt-2" role="progressbar" aria-label="Fortaleza de la contraseña" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="checkerStrengthProgress">
+                  <div class="progress-bar bg-secondary" id="checkerStrengthBar"></div>
+                </div>
+                <p class="small text-secondary mt-2 mb-4">Entropía estimada: <strong id="checkerEntropy">0</strong> bits</p>
+                <h3 class="h6">Requisitos</h3>
+                <ul class="requirement-list" id="checkerRequirements">
+                  <li class="requirement" id="reqLength8"><span class="req-dot" aria-hidden="true"></span>Al menos 8 caracteres</li>
+                  <li class="requirement" id="reqLength12"><span class="req-dot" aria-hidden="true"></span>12 caracteres o más (recomendado)</li>
+                  <li class="requirement" id="reqUpper"><span class="req-dot" aria-hidden="true"></span>Contiene mayúsculas</li>
+                  <li class="requirement" id="reqLower"><span class="req-dot" aria-hidden="true"></span>Contiene minúsculas</li>
+                  <li class="requirement" id="reqDigit"><span class="req-dot" aria-hidden="true"></span>Contiene números</li>
+                  <li class="requirement" id="reqSymbol"><span class="req-dot" aria-hidden="true"></span>Contiene símbolos</li>
+                  <li class="requirement" id="reqUnique"><span class="req-dot" aria-hidden="true"></span>Sin caracteres repetidos en exceso</li>
+                </ul>
+                <p class="small text-secondary mb-0">La fortaleza es una estimación y no garantiza que la contraseña no haya sido filtrada.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="tab-history" role="tabpanel" aria-labelledby="historyTab" tabindex="0">
+        <div class="card results-card">
+          <div class="card-header">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <h2 class="h6 mb-0">Historial de la sesión</h2>
+                <span class="badge rounded-pill text-bg-primary" id="historyCountBadge">0</span>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="historyToggleAll">Mostrar todo</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="historyCopyAll">Copiar todo</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="historyClear">Limpiar historial</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="small text-secondary">Se guardan como máximo 100 resultados en memoria y se eliminan al recargar la página. No se usa almacenamiento del navegador.</p>
+            <div class="empty-state" id="historyEmpty">
+              <p class="mb-1 fw-semibold">El historial está vacío</p>
+              <p class="mb-0 small text-secondary">Los resultados generados aparecerán aquí durante esta sesión.</p>
+            </div>
+            <div class="password-list d-none" id="historyList"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-top py-4">
+    <div class="container d-flex flex-wrap justify-content-between gap-2 small text-secondary">
+      <span>Clave Segura · Generación local con Web Crypto</span>
+      <span>Sin backend · Sin cookies · Sin almacenamiento automático</span>
+    </div>
+  </footer>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="js/crypto.js"></script>
+  <script src="js/wordlist.js"></script>
+  <script src="js/generators.js"></script>
+  <script src="js/exporters.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
